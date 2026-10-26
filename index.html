@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>gamedesign</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #080a14;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #unity-container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      #unity-canvas {
+        width: 100%;
+        height: 100%;
+        background: #05060b;
+        cursor: default;
+      }
+      #unity-loading-bar {
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        z-index: 10;
+      }
+      .loading-title {
+        color: #64b5f6;
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        text-shadow: 0 0 12px rgba(100, 181, 246, 0.6);
+      }
+      #unity-progress-bar-empty {
+        width: 320px;
+        height: 16px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid #3d5afe;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 0 15px rgba(61, 90, 254, 0.4);
+      }
+      #unity-progress-bar-full {
+        width: 0%;
+        height: 100%;
+        background: linear-gradient(90deg, #3d5afe, #00e5ff);
+        transition: width 0.15s ease-out;
+      }
+      #unity-warning {
+        position: absolute;
+        bottom: 20px;
+        color: #ff5252;
+        font-size: 14px;
+        background: rgba(0, 0, 0, 0.85);
+        padding: 8px 16px;
+        border-radius: 4px;
+        display: none;
+        z-index: 20;
+      }
+      #fullscreen-btn {
+        position: absolute;
+        bottom: 12px;
+        right: 12px;
+        background: rgba(13, 20, 38, 0.8);
+        border: 1px solid #3d5afe;
+        color: #e0e0e0;
+        padding: 6px 14px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 600;
+        transition: all 0.2s;
+        z-index: 15;
+      }
+      #fullscreen-btn:hover {
+        background: #3d5afe;
+        color: #fff;
+        box-shadow: 0 0 10px rgba(61, 90, 254, 0.8);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="unity-container">
+      <canvas id="unity-canvas" width=960 height=600 tabindex="-1"></canvas>
+      <div id="unity-loading-bar">
+        <div class="loading-title">gamedesign</div>
+        <div id="unity-progress-bar-empty">
+          <div id="unity-progress-bar-full"></div>
+        </div>
+      </div>
+      <div id="unity-warning"></div>
+      <button id="fullscreen-btn">⛶ FULLSCREEN</button>
+    </div>
+    <script>
+      var container = document.querySelector("#unity-container");
+      var canvas = document.querySelector("#unity-canvas");
+      var loadingBar = document.querySelector("#unity-loading-bar");
+      var progressBarFull = document.querySelector("#unity-progress-bar-full");
+      var warningBanner = document.querySelector("#unity-warning");
+      var fullscreenBtn = document.querySelector("#fullscreen-btn");
+
+      function unityShowBanner(msg, type) {
+        warningBanner.innerHTML = msg;
+        warningBanner.style.display = "block";
+        if (type !== 'error') {
+          setTimeout(function() { warningBanner.style.display = "none"; }, 5000);
+        }
+      }
+
+      var buildUrl = "Build";
+      var loaderUrl = buildUrl + "/WebGL_Build.loader.js";
+      var config = {
+        dataUrl: buildUrl + "/WebGL_Build.data",
+        frameworkUrl: buildUrl + "/WebGL_Build.framework.js",
+        codeUrl: buildUrl + "/WebGL_Build.wasm",
+        companyName: "DefaultCompany",
+        productName: "gamedesign",
+        productVersion: "1.0",
+        showBanner: unityShowBanner,
+      };
+
+      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        var meta = document.createElement('meta');
+        meta.name = 'viewport';
+        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+        document.getElementsByTagName('head')[0].appendChild(meta);
+      }
+
+      loadingBar.style.display = "flex";
+
+      var script = document.createElement("script");
+      script.src = loaderUrl;
+      script.onload = () => {
+        createUnityInstance(canvas, config, (progress) => {
+          progressBarFull.style.width = (100 * progress) + "%";
+        }).then((unityInstance) => {
+          loadingBar.style.display = "none";
+          fullscreenBtn.onclick = () => {
+            unityInstance.SetFullscreen(1);
+          };
+        }).catch((message) => {
+          alert(message);
+        });
+      };
+      document.body.appendChild(script);
+    </script>
+  </body>
+</html>
